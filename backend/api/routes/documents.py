@@ -1,9 +1,6 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException
 
-from backend.database.database import Database
-from backend.database.document_repository import (
-    DocumentRepository,
-)
+from backend.rag.application import create_rag_application
 
 
 router = APIRouter(
@@ -12,17 +9,13 @@ router = APIRouter(
 )
 
 
-database = Database()
-
-repository = DocumentRepository(
-    database
-)
-
-
 @router.get("")
 def list_documents():
+    """Return all registered documents."""
 
-    documents = repository.list()
+    application = create_rag_application()
+
+    documents = application.list_documents()
 
     return {
         "documents": [
@@ -43,19 +36,18 @@ def list_documents():
 
 
 @router.get("/{document_id}")
-def get_document(
-    document_id: str,
-):
+def get_document(document_id: str):
+    """Return information about a specific document."""
 
-    document = repository.get(
-        document_id
-    )
+    application = create_rag_application()
+
+    document = application.get_document(document_id)
 
     if document is None:
-
-        return {
-            "error": "Document not found"
-        }
+        raise HTTPException(
+            status_code=404,
+            detail="Document not found.",
+        )
 
     return {
         "id": document.id,
@@ -68,4 +60,3 @@ def get_document(
         "updated_at": document.updated_at,
         "error_message": document.error_message,
     }
-    

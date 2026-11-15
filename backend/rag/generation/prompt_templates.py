@@ -7,12 +7,15 @@ Answer questions using only the supplied context.
 Rules:
 1. Do not invent facts.
 2. If the context does not contain enough information,
-   clearly say that the information is not available.
-3. Prefer precise and concise answers.
+   clearly state that the information is unavailable.
+3. Provide precise and concise answers.
 4. Preserve important technical terminology.
-5. Cite the provided sources using their source identifiers.
+5. Every factual claim must include a citation.
+6. Use the exact citation format [SOURCE 1], [SOURCE 2], etc.
+7. Only cite source identifiers that appear in the supplied context.
+8. Never invent source identifiers.
+9. Place citations immediately after the claims they support.
 """
-
 
 USER_PROMPT_TEMPLATE = """
 Context:
@@ -25,17 +28,20 @@ Question:
 
 Instructions:
 
-Answer the question using the context above.
-When making a factual claim, identify the relevant source.
+Answer the question using only the supplied context.
+
+For every factual claim, include the corresponding citation
+using the exact format [SOURCE 1].
+
+Example:
+The platform provides soil analysis [SOURCE 1].
+
+Do not invent citations.
 """
 
 
-def build_prompt(
-    question: str,
-    context: str
-) -> str:
-
+def build_prompt(question: str, context: str) -> str:
     return USER_PROMPT_TEMPLATE.format(
         question=question,
-        context=context
+        context=context,
     )

@@ -5,69 +5,72 @@ from fastapi import (
     APIRouter,
     File,
     HTTPException,
-    UploadFile
+    UploadFile,
 )
 
-from backend.rag.application import (
-    create_rag_application
-)
+from backend.rag.application import create_rag_application
 
 
 router = APIRouter(
     prefix="/index",
-    tags=["Indexing"]
+    tags=["Indexing"],
 )
 
-
 DATA_DIR = Path("data/raw")
+MAX_UPLOAD_SIZE = 25 * 1024 * 1024  # 25 MB
 
 DATA_DIR.mkdir(
     parents=True,
-    exist_ok=True
+    exist_ok=True,
 )
 
 
 @router.post("/pdf")
-async def index_pdf(
-    file: UploadFile = File(...)
-):
+async def index_pdf(file: UploadFile = File(...)):
+    """Upload and index a PDF document."""
 
     if not file.filename:
-
         raise HTTPException(
             status_code=400,
-            detail="Filename is required."
+            detail="Filename is required.",
         )
 
-    safe_filename = (
-        Path(file.filename).name
-    )
+    safe_filename = Path(file.filename).name
 
-    if not safe_filename.lower().endswith(
-        ".pdf"
-    ):
-
+    if not safe_filename.lower().endswith(".pdf"):
         raise HTTPException(
             status_code=400,
-            detail="Only PDF files are supported."
+            detail="Only PDF files are supported.",
         )
 
-    destination = (
-        DATA_DIR / safe_filename
-    )
+    destination = DATA_DIR / safe_filename
+    total_size = 0
 
     try:
-
         with destination.open("wb") as buffer:
+            while True:
+                chunk = await file.read(1024 * 1024)
 
-            shutil.copyfileobj(
-                file.file,
-                buffer
+                if not chunk:
+                    break
+
+                total_size += len(chunk)
+
+                if total_size > MAX_UPLOAD_SIZE:
+                    raise HTTPException(
+                        status_code=413,
+                        detail="PDF exceeds the 25 MB upload limit.",
+                    )
+
+                buffer.write(chunk)
+
+        if total_size == 0:
+            raise HTTPException(
+                status_code=400,
+                detail="Uploaded PDF is empty.",
             )
 
-        application = (
-            create_rag_application()
-        )
+        application = create_rag_application()
 
         result = application.index_pdf(
             str(destination)
@@ -75,19 +78,20 @@ async def index_pdf(
 
         return {
             "status": "success",
-            "result": result
+            "result": result,
         }
 
+    except HTTPException:
+        raise
+
     except Exception as exc:
+        if destination.exists():
+            destination.unlink()
 
         raise HTTPException(
             status_code=500,
-            detail=str(exc)
+            detail=str(exc),
         )
 
     finally:
-
         await file.close()
-    MAX_UPLOAD_SIZE = (
-    25 * 1024 * 1024
-)

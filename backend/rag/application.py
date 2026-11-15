@@ -31,6 +31,7 @@ class RAGApplication:
     def __init__(self):
         # --------------------------------------------------
         # Application state
+        
         # --------------------------------------------------
         self.state = ApplicationState()
 

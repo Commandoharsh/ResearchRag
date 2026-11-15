@@ -2,9 +2,11 @@ import sqlite3
 import time
 from pathlib import Path
 
+import requests
 from fastapi import APIRouter
 
 from backend.config import settings
+from backend.rag.application import create_rag_application
 
 
 router = APIRouter(
@@ -14,9 +16,7 @@ router = APIRouter(
 
 
 def check_sqlite():
-    """
-    Check SQLite database connectivity.
-    """
+    """Check SQLite database connectivity."""
 
     start = time.perf_counter()
 
@@ -28,16 +28,13 @@ def check_sqlite():
             exist_ok=True,
         )
 
-        connection = sqlite3.connect(
+        with sqlite3.connect(
             database_path,
             timeout=2,
-        )
-
-        cursor = connection.cursor()
-        cursor.execute("SELECT 1")
-        cursor.fetchone()
-
-        connection.close()
+        ) as connection:
+            cursor = connection.cursor()
+            cursor.execute("SELECT 1")
+            cursor.fetchone()
 
         latency_ms = (
             time.perf_counter() - start
@@ -58,21 +55,40 @@ def check_sqlite():
 
 def check_qdrant():
     """
-    Check Qdrant connectivity.
+    Check the existing embedded Qdrant instance.
+
+    IMPORTANT:
+    Do not create another QdrantClient with the same
+    local storage path. The application already owns it.
     """
 
     start = time.perf_counter()
 
     try:
-        from qdrant_client import QdrantClient
+        application = create_rag_application()
 
-        client = QdrantClient(
-            host="localhost",
-            port=6333,
-            timeout=2,
-        )
+        vector_store = application.state.vector_store
+        client = vector_store.client
 
-        client.get_collections()
+        if client is None:
+            raise RuntimeError(
+                "Qdrant client is not initialized."
+            )
+
+        collections = client.get_collections()
+
+        collection_names = [
+            collection.name
+            for collection in collections.collections
+        ]
+
+        expected_collection = vector_store.collection_name
+
+        if expected_collection not in collection_names:
+            raise RuntimeError(
+                f"Collection '{expected_collection}' "
+                "does not exist."
+            )
 
         latency_ms = (
             time.perf_counter() - start
@@ -80,6 +96,8 @@ def check_qdrant():
 
         return {
             "status": "healthy",
+            "mode": "embedded",
+            "collection": expected_collection,
             "latency_ms": round(latency_ms, 2),
         }
 
@@ -91,22 +109,17 @@ def check_qdrant():
 
 
 def check_embeddings():
-    """
-    Check whether the embedding model can be loaded.
-    """
+    """Check the initialized embedding model."""
 
     start = time.perf_counter()
 
     try:
-        from sentence_transformers import SentenceTransformer
+        application = create_rag_application()
 
-        model = SentenceTransformer(
-            "all-MiniLM-L6-v2"
-        )
+        embedding_model = application.state.embedding_model
 
-        vector = model.encode(
-            ["health check"],
-            normalize_embeddings=True,
+        vector = embedding_model.encode(
+            ["ResearchRAG health check"]
         )
 
         if vector is None or len(vector) == 0:
@@ -133,15 +146,11 @@ def check_embeddings():
 
 
 def check_ollama():
-    """
-    Check Ollama availability.
-    """
+    """Check Ollama availability."""
 
     start = time.perf_counter()
 
     try:
-        import requests
-
         response = requests.get(
             f"{settings.OLLAMA_BASE_URL}/api/tags",
             timeout=3,
@@ -184,9 +193,7 @@ def check_ollama():
 
 @router.get("")
 def health_check():
-    """
-    Detailed ResearchRAG health check.
-    """
+    """Detailed ResearchRAG health check."""
 
     services = {
         "sqlite": check_sqlite(),
