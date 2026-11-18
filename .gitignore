@@ -63,3 +63,14 @@ OLLAMA_MODEL=llama3.2
 RAG_TOP_K=5
 RAG_RETRIEVAL_K=20
 RAG_FINAL_K=5.env
+# Local databases
+data/*.db
+data/qdrant/
+
+# Python environments
+.venv/
+.venv_python310_backup/
+
+# Uploaded documents
+data/raw/*
+!data/raw/.gitkeep

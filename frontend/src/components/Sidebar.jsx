@@ -1,10 +1,12 @@
 import { useEffect, useState } from "react";
+
 import {
     Plus,
     MessageSquare,
     FileText,
     Activity,
     Trash2,
+    Loader2,
 } from "lucide-react";
 
 import {
@@ -23,19 +25,22 @@ function Sidebar({
     const [conversations, setConversations] = useState([]);
     const [loading, setLoading] = useState(true);
     const [creating, setCreating] = useState(false);
+    const [deletingId, setDeletingId] = useState(null);
+    const [error, setError] = useState("");
 
     async function loadConversations() {
         try {
             setLoading(true);
+            setError("");
 
             const data = await getConversations();
 
-            setConversations(data || []);
-        } catch (error) {
-            console.error(
-                "Failed to load conversations:",
-                error
+            setConversations(
+                Array.isArray(data) ? data : []
             );
+        } catch (err) {
+            console.error(err);
+            setError("Unable to load conversations.");
         } finally {
             setLoading(false);
         }
@@ -46,17 +51,21 @@ function Sidebar({
     }, []);
 
     async function handleNewConversation() {
-        if (creating) {
-            return;
-        }
+        if (creating) return;
 
         try {
             setCreating(true);
+            setError("");
 
-            const conversation =
-                await createConversation(
-                    "New Conversation"
+            const conversation = await createConversation(
+                "New Conversation"
+            );
+
+            if (!conversation?.id) {
+                throw new Error(
+                    "Invalid conversation response."
                 );
+            }
 
             setConversations((previous) => [
                 conversation,
@@ -64,59 +73,50 @@ function Sidebar({
             ]);
 
             onConversationCreated(conversation);
-        } catch (error) {
-            console.error(
-                "Failed to create conversation:",
-                error
-            );
+        } catch (err) {
+            console.error(err);
+            setError("Could not create a conversation.");
         } finally {
             setCreating(false);
         }
     }
 
-    async function handleDelete(
-        event,
-        conversationId
-    ) {
+    async function handleDelete(event, conversationId) {
         event.stopPropagation();
 
         const confirmed = window.confirm(
-            "Delete this conversation?"
+            "Are you sure you want to delete this conversation?"
         );
 
-        if (!confirmed) {
-            return;
-        }
+        if (!confirmed) return;
 
         try {
-            await deleteConversation(
-                conversationId
-            );
+            setDeletingId(conversationId);
+            setError("");
+
+            await deleteConversation(conversationId);
 
             setConversations((previous) =>
                 previous.filter(
                     (conversation) =>
-                        conversation.id !==
-                        conversationId
+                        conversation.id !== conversationId
                 )
             );
 
-            if (
-                activeConversationId ===
-                conversationId
-            ) {
+            if (activeConversationId === conversationId) {
                 onConversationSelect(null);
             }
-        } catch (error) {
-            console.error(
-                "Failed to delete conversation:",
-                error
-            );
+        } catch (err) {
+            console.error(err);
+            setError("Could not delete the conversation.");
+        } finally {
+            setDeletingId(null);
         }
     }
 
     return (
         <aside className="sidebar">
+
             <div className="sidebar-header">
                 <div className="brand">
                     ResearchRAG
@@ -127,20 +127,36 @@ function Sidebar({
                     onClick={handleNewConversation}
                     disabled={creating}
                     title="New conversation"
+                    aria-label="Create new conversation"
                 >
-                    <Plus size={21} />
+                    {creating ? (
+                        <Loader2
+                            size={20}
+                            className="spin"
+                        />
+                    ) : (
+                        <Plus size={21} />
+                    )}
                 </button>
             </div>
 
+            {error && (
+                <div className="sidebar-error">
+                    {error}
+                </div>
+            )}
+
             <div className="sidebar-section">
+
                 <div className="sidebar-section-title">
                     Conversations
                 </div>
 
                 <div className="conversation-list">
+
                     {loading && (
                         <div className="sidebar-empty">
-                            Loading...
+                            Loading conversations...
                         </div>
                     )}
 
@@ -152,55 +168,72 @@ function Sidebar({
                         )}
 
                     {!loading &&
-                        conversations.map(
-                            (conversation) => (
-                                <div
-                                    key={
+                        conversations.map((conversation) => (
+                            <div
+                                key={conversation.id}
+                                className={`conversation-item ${
+                                    activeConversationId ===
+                                    conversation.id
+                                        ? "active"
+                                        : ""
+                                }`}
+                                onClick={() =>
+                                    onConversationSelect(
                                         conversation.id
-                                    }
-                                    className={`conversation-item ${
-                                        activeConversationId ===
-                                        conversation.id
-                                            ? "active"
-                                            : ""
-                                    }`}
-                                    onClick={() =>
+                                    )
+                                }
+                                role="button"
+                                tabIndex={0}
+                                onKeyDown={(event) => {
+                                    if (
+                                        event.key === "Enter" ||
+                                        event.key === " "
+                                    ) {
+                                        event.preventDefault();
+
                                         onConversationSelect(
+                                            conversation.id
+                                        );
+                                    }
+                                }}
+                            >
+                                <MessageSquare size={16} />
+
+                                <span className="conversation-title">
+                                    {conversation.title ||
+                                        "Untitled conversation"}
+                                </span>
+
+                                <button
+                                    className="delete-conversation"
+                                    onClick={(event) =>
+                                        handleDelete(
+                                            event,
                                             conversation.id
                                         )
                                     }
+                                    disabled={
+                                        deletingId === conversation.id
+                                    }
+                                    title="Delete conversation"
+                                    aria-label="Delete conversation"
                                 >
-                                    <MessageSquare
-                                        size={16}
-                                    />
-
-                                    <span className="conversation-title">
-                                        {
-                                            conversation.title
-                                        }
-                                    </span>
-
-                                    <button
-                                        className="delete-conversation"
-                                        onClick={(event) =>
-                                            handleDelete(
-                                                event,
-                                                conversation.id
-                                            )
-                                        }
-                                        title="Delete conversation"
-                                    >
-                                        <Trash2
+                                    {deletingId === conversation.id ? (
+                                        <Loader2
                                             size={14}
+                                            className="spin"
                                         />
-                                    </button>
-                                </div>
-                            )
-                        )}
+                                    ) : (
+                                        <Trash2 size={14} />
+                                    )}
+                                </button>
+                            </div>
+                        ))}
                 </div>
             </div>
 
             <div className="sidebar-bottom">
+
                 <button
                     className="sidebar-nav-button"
                     onClick={onDocuments}
@@ -216,7 +249,9 @@ function Sidebar({
                     <Activity size={18} />
                     <span>Monitoring</span>
                 </button>
+
             </div>
+
         </aside>
     );
 }

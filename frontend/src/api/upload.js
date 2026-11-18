@@ -1,15 +1,22 @@
 import apiClient from "./client";
 
-export async function uploadDocument(file) {
+export async function uploadDocument(file, onProgress) {
     const formData = new FormData();
+
     formData.append("file", file);
 
     const response = await apiClient.post(
         "/index/pdf",
         formData,
         {
-            headers: {
-                "Content-Type": "multipart/form-data",
+            onUploadProgress: (event) => {
+                if (event.total && onProgress) {
+                    const percentage = Math.round(
+                        (event.loaded * 100) / event.total
+                    );
+
+                    onProgress(percentage);
+                }
             },
         }
     );
