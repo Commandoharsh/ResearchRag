@@ -1,24 +1,55 @@
+# Python environments
+.venv/
+venv/
+env/
+.venv_python310_backup/
+
+# Python cache
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+
+# IDE
+.vscode/
+.idea/
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
 # Logs
-logs
 *.log
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
-lerna-debug.log*
 
-node_modules
-dist
-dist-ssr
-*.local
+# Frontend dependencies and builds
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
 
-# Editor directories and files
-.vscode/*
-!.vscode/extensions.json
-.idea
+# Local databases
+data/*.db
+data/qdrant/
+data/vector_store/
+data/embeddings/
+
+# Uploaded documents
+data/raw/*
+!data/raw/.gitkeep
+
+# Model files and caches
+*.pt
+*.pth
+*.bin
+*.safetensors
+.cache/
+huggingface_cache/
+
+# OS
 .DS_Store
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
+Thumbs.db

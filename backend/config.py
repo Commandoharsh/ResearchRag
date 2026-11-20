@@ -2,20 +2,23 @@ import os
 
 from dotenv import load_dotenv
 
-
 load_dotenv()
 
 
 class Settings:
 
     # ---------------------------------------------------------
-    # LLM
+    # LLM PROVIDER
     # ---------------------------------------------------------
 
     LLM_PROVIDER = os.getenv(
         "LLM_PROVIDER",
         "ollama",
-    )
+    ).strip().lower()
+
+    # ---------------------------------------------------------
+    # OLLAMA
+    # ---------------------------------------------------------
 
     OLLAMA_BASE_URL = os.getenv(
         "OLLAMA_BASE_URL",
@@ -25,6 +28,32 @@ class Settings:
     OLLAMA_MODEL = os.getenv(
         "OLLAMA_MODEL",
         "llama3.2",
+    )
+
+    # ---------------------------------------------------------
+    # GEMINI
+    # ---------------------------------------------------------
+
+    GEMINI_API_KEY = os.getenv(
+        "GEMINI_API_KEY",
+        "",
+    )
+
+    GEMINI_MODEL = os.getenv(
+        "GEMINI_MODEL",
+        "gemini-2.5-flash",
+    )
+
+    GEMINI_BASE_URL = os.getenv(
+        "GEMINI_BASE_URL",
+        "https://generativelanguage.googleapis.com/v1beta",
+    )
+
+    GEMINI_TIMEOUT = int(
+        os.getenv(
+            "GEMINI_TIMEOUT",
+            "120",
+        )
     )
 
     # ---------------------------------------------------------
@@ -53,7 +82,7 @@ class Settings:
     )
 
     # ---------------------------------------------------------
-    # Uploads
+    # UPLOADS
     # ---------------------------------------------------------
 
     MAX_UPLOAD_SIZE_MB = int(
@@ -64,7 +93,7 @@ class Settings:
     )
 
     # ---------------------------------------------------------
-    # JWT Authentication
+    # JWT AUTHENTICATION
     # ---------------------------------------------------------
 
     JWT_SECRET_KEY = os.getenv(

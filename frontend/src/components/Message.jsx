@@ -2,28 +2,10 @@ import { User, Bot, FileText } from "lucide-react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-function formatTimestamp(timestamp) {
-    if (!timestamp) {
-        return "";
-    }
-
-    const date = new Date(timestamp);
-
-    if (Number.isNaN(date.getTime())) {
-        return "";
-    }
-
-    return date.toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-    });
-}
-
 function Message({
     role,
     content,
     citations = [],
-    timestamp,
 }) {
     const isUser = role === "user";
 
@@ -37,59 +19,94 @@ function Message({
         >
             <div className="message-icon">
                 {isUser ? (
-                    <User size={18} />
+                    <User size={17} />
                 ) : (
-                    <Bot size={19} />
+                    <Bot size={18} />
                 )}
             </div>
 
             <div className="message-body">
-                <div className="message-heading">
-                    <div className="message-role">
-                        {isUser ? "You" : "ResearchRAG"}
-                    </div>
-
-                    {timestamp && (
-                        <time className="message-timestamp">
-                            {formatTimestamp(timestamp)}
-                        </time>
-                    )}
+                <div className="message-role">
+                    {isUser ? "You" : "ResearchRAG"}
                 </div>
 
-                <div className="message-content markdown-content">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                        {String(content || "")}
-                    </ReactMarkdown>
+                <div className="message-content">
+                    {isUser ? (
+                        <div className="user-message-text">
+                            {content}
+                        </div>
+                    ) : (
+                        <ReactMarkdown
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                                a({ href, children }) {
+                                    return (
+                                        <a
+                                            href={href}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            {children}
+                                        </a>
+                                    );
+                                },
+
+                                code({
+                                    children,
+                                    className,
+                                    ...props
+                                }) {
+                                    return (
+                                        <code
+                                            className={className}
+                                            {...props}
+                                        >
+                                            {children}
+                                        </code>
+                                    );
+                                },
+
+                                table({ children }) {
+                                    return (
+                                        <div className="markdown-table-wrapper">
+                                            <table>
+                                                {children}
+                                            </table>
+                                        </div>
+                                    );
+                                },
+                            }}
+                        >
+                            {String(content ?? "")}
+                        </ReactMarkdown>
+                    )}
                 </div>
 
                 {!isUser && citations.length > 0 && (
                     <div className="citation-list">
                         <div className="citation-heading">
-                            Referenced Sources
+                            <FileText size={16} />
+                            Sources
                         </div>
 
                         {citations.map((citation, index) => (
                             <div
                                 className="citation-item"
-                                key={
-                                    citation.id ||
-                                    citation.chunk_id ||
-                                    index
-                                }
+                                key={citation.id || citation.chunk_id || index}
                             >
-                                <FileText size={16} />
+                                <FileText size={15} />
 
                                 <div className="citation-details">
-                                    <span>
+                                    <span className="citation-filename">
                                         {citation.filename ||
                                             citation.source ||
                                             "Research document"}
                                     </span>
 
                                     {citation.page && (
-                                        <small>
+                                        <span className="citation-page">
                                             Page {citation.page}
-                                        </small>
+                                        </span>
                                     )}
                                 </div>
                             </div>
