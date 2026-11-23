@@ -106,7 +106,7 @@ installing or selecting provider versions.
 ### 1. Clone the repository
 
 ``` bash
-git clone https://github.com/Commandoharsh/rag-pipeline.git
+git clone https://github.com/Commandoharsh/ResearchRag.git
 cd rag-pipeline
 ```
 
@@ -333,7 +333,6 @@ Potential areas for continued development:
 ## Author
 
 **Harsh Rathore**\
-Amity University, Uttar Pradesh, Noida
 
 ## License
 
