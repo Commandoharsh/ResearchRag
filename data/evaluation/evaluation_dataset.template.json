@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {
+      "id": "case_001",
+      "question": "Write a question that can be answered from one or more of your indexed documents.",
+      "relevant_chunks": ["REPLACE_WITH_REAL_CHUNK_ID"],
+      "reference_answer": "Write a concise answer verified against the source document.",
+      "expected_sources": ["REPLACE_WITH_EXACT_SOURCE_FILENAME"],
+      "answerable": true
+    }
+  ]
+}

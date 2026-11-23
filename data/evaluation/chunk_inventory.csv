@@ -1,0 +1,70 @@
+﻿chunk_id,source,page,chunk_index,content
+Harsh_Rathore_Resume_Tailored.pdf_1_5,Harsh_Rathore_Resume_Tailored.pdf,1,5,"rved through FastAPI and a React/Next.js frontend.
+Other Projects Details on GitHub
+● NetChat: real-time LAN messaging app (FastAPI, WebSockets), github.com/Commandoharsh/LANLink
+● Java Banking and ATM System: Core Java OOP app with file persistence, github.com/Commandoharsh/java-banking-management-system
+● Product Authentication Platform: Ethereum smart contract prototype for verifying product originality
+EDUCATION
+Amity University, Noida, B.Tech, Computer Science & Engineering | CGPA: 7.69/10 2022 - 2026
+12th (CBSE): 82.4% | 10th (CBSE): 81.4%
+Certifications: Joy of Computing Using Python (NPTEL); Python for Data Science (NPTEL)
+LEADERSHIP & VOLUNTEERING
+● Member, Placement Committee (CRC), Amity University Noida: supported recruitment coordination.
+● Team Coordinator, Amity Youth Fest 2023: led a team through event planning and execution.
+● Volunteer, YSS Foundation: environment, education, and digital-outreach initiatives; skill-development workshops."
+Harsh_Rathore_Resume_Tailored.pdf_1_1,Harsh_Rathore_Resume_Tailored.pdf,1,1,"arn, Hugging Face 
+Transformers, CLIP, Retrieval-Augmented Generation (RAG), LLM applications, vector search, BM25, reranking, OpenCV
+Evaluation & Scientific Computing: NDCG, MRR, bootstrap validation, significance testing, NumPy, SciPy, Matplotlib
+Backend & Web: FastAPI, Node.js, React, Next.js, Pydantic, REST APIs, WebSockets, SQLite, Vite
+Cloud & Tools: AWS, Linux, Nginx, HTTPS/TLS deployment, CI/CD (GitHub Actions), Git, pytest (unit testing)
+Core CS: Data Structures and Algorithms, Object-Oriented Programming, Operating Systems, Computer Networks
+EXPERIENCE
+Research Intern, Open Health Systems Laboratory (OHSL) May 2025 - Jul 2025
+● Contributed as part of a research team to the Thermal Ablation of Tumours for Telesynergy project, building a machine learning model to 
+predict tumor ablation zones from CT/MRI imaging and patient clinical parameters.
+● Used Hugging Face Transformers in the modeling pipeline to combine imaging and patient-parameter data for ablation zone prediction.
+P"
+Harsh_Rathore_Resume_Tailored.pdf_1_4,Harsh_Rathore_Resume_Tailored.pdf,1,4,"Python) github.com/Commandoharsh/advanced-planet-simulation
+● Built a real-time C++17/SFML orbit simulator (Velocity Verlet, multi-body gravity), then rewrote it as a tested Python package with 
+vectorized NumPy gravity, five integrators (Euler, symplectic Euler, Verlet, RK4, Yoshida4), and an adaptive DOP853 solver.
+● Benchmarked integrators across 5 orbital scenarios: Yoshida4 reached a relative energy error as low as 5.1e-09 versus 5.9e-01 for Euler. 
+Added 73 pytest tests with GitHub Actions CI and fixed 6 numerical-stability bugs found in the original C++ version.
+Multimodal Chest X-ray Diagnostic AI github.com/Commandoharsh/multimodal-chest-xray-ai
+● Built a multimodal medical AI pipeline fusing chest X-ray images with radiology reports and clinical text via separate encoders and a 
+fusion module (PyTorch, Hugging Face, OpenCV), served through FastAPI and a React/Next.js frontend.
+Other Projects Details on GitHub
+● NetChat: real-time LAN messaging app (FastAPI, WebSockets), gith"
+Harsh_Rathore_Resume_Tailored.pdf_1_0,Harsh_Rathore_Resume_Tailored.pdf,1,0,"HARSH RATHORE
+Machine Learning / AI Engineer | Software Engineer
+Noida, Uttar Pradesh, India | +91-7772863000 | harshrathoremyname@gmail.com | linkedin.com/in/Harsh-Rathore | github.com/Commandoharsh
+SUMMARY
+Final-year B.Tech Computer Science student (Amity University Noida, 2026) targeting Machine Learning and AI Engineer roles. Research 
+intern at Open Health Systems Laboratory and co-author of a research paper. Built and deployed a multimodal AI search system (CLIP, NLP) 
+evaluated on 85,000+ products with a 13.5% NDCG@10 gain, plus a RAG pipeline with hybrid retrieval and reranking. Strong in Python, 
+PyTorch, Hugging Face, FastAPI, and cloud deployment.
+TECHNICAL SKILLS
+Languages: Python, C++, Java, JavaScript, TypeScript, SQL
+Machine Learning / AI: Machine Learning, Deep Learning, NLP, Computer Vision, PyTorch, TensorFlow, scikit-learn, Hugging Face 
+Transformers, CLIP, Retrieval-Augmented Generation (RAG), LLM applications, vector search, BM25, reranking, OpenCV
+Evaluation & Sci"
+Harsh_Rathore_Resume_Tailored.pdf_1_3,Harsh_Rathore_Resume_Tailored.pdf,1,3,"x reverse proxy 
+with HTTPS on a cloud Linux VM, achieving ~400 ms end-to-end query latency on CPU-only inference.
+● Co-authored a research paper on the architecture, fusion methodology, and evaluation (4 authors, department-affiliated submission).
+ResearchRAG: Retrieval-Augmented Generation Pipeline github.com/Commandoharsh/rag-pipeline
+● Built an end-to-end RAG system for question answering over research papers and technical documents, combining semantic vector 
+search, BM25 lexical retrieval, query transformation, neural reranking, and Reciprocal Rank Fusion to assemble LLM context.
+● Implemented a modular Python pipeline (PDF ingestion, transformer embeddings, hybrid retrieval, reranking) with a pluggable LLM 
+backend (external API or local Ollama-compatible models) and pytest test coverage.
+N-Body Orbital Mechanics Simulator (C++ and Python) github.com/Commandoharsh/advanced-planet-simulation
+● Built a real-time C++17/SFML orbit simulator (Velocity Verlet, multi-body gravity), the"
+Harsh_Rathore_Resume_Tailored.pdf_1_2,Harsh_Rathore_Resume_Tailored.pdf,1,2,"al parameters.
+● Used Hugging Face Transformers in the modeling pipeline to combine imaging and patient-parameter data for ablation zone prediction.
+PROJECTS
+Multimodal AI Product Search Engine (Flagship Project) Aug 2025 - Apr 2026
+● Designed and built a multimodal e-commerce search system combining CLIP-based zero-shot image classification, a rule-based NLP 
+constraint parser, and review sentiment filtering (TF-IDF + logistic regression) with Wilson-score ranking.
+● Compared three ranking strategies (symbolic early fusion, static late fusion, intent-aware dynamic fusion) on 1,500 queries over 85,241 
+products; intent-aware fusion improved NDCG@10 by 13.5% and MRR by 14.9% over baseline (p < 0.05, bootstrap validated).
+● Deployed the full production stack: React/TypeScript + Vite frontend, FastAPI + Pydantic backend, SQLite storage, Nginx reverse proxy 
+with HTTPS on a cloud Linux VM, achieving ~400 ms end-to-end query latency on CPU-only inference.
+● Co-authored a research paper on t"

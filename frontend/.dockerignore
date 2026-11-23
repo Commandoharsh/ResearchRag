@@ -1,0 +1,10 @@
+node_modules
+dist
+.vite
+coverage
+npm-debug.log*
+yarn-debug.log*
+.git
+.env
+.env.*
+!.env.example

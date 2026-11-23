@@ -1,3 +1,5 @@
+from backend.evaluation.hallucination import hallucination_rate
+
 from backend.evaluation.answer_metrics import (
     answer_keyword_overlap,
 )
@@ -67,7 +69,12 @@ class RAGEvaluator:
                     question,
                     answer,
                 ),
+                "hallucination_rate_heuristic": hallucination_rate(
+                    answer=answer,
+                    context=context
+                ),
             }
+            
 
         # -----------------------------------------------------
         # Mode 2: Dataset-based evaluation
@@ -158,3 +165,4 @@ class RAGEvaluator:
                 ),
             },
         }
+        

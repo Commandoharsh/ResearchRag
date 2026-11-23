@@ -1,0 +1,28 @@
+# Git and Python
+.git
+.gitignore
+**/__pycache__
+**/*.py[cod]
+**/.pytest_cache
+**/.mypy_cache
+**/.ruff_cache
+.venv
+venv
+env
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Frontend dependencies/build output (built in its own image)
+frontend/node_modules
+frontend/dist
+
+# Local user data and model caches must be mounted at runtime, not baked into image
+data/raw/*
+!data/raw/.gitkeep
+data/qdrant
+data/*.db
+data/**/*.sqlite
+.cache

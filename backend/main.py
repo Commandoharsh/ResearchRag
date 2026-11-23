@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
@@ -39,12 +40,24 @@ app = FastAPI(
 # CORS
 # ============================================================
 
+default_origins = [
+    "http://localhost:8080",
+    "http://127.0.0.1:8080",
+    "http://localhost:5173",
+    "http://127.0.0.1:5173",
+]
+
+cors_origins = os.getenv("CORS_ORIGINS", "")
+
+allow_origins = (
+    [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
+    if cors_origins.strip()
+    else default_origins
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:5173",
-        "http://127.0.0.1:5173",
-    ],
+    allow_origins=allow_origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
