@@ -20,7 +20,7 @@ from backend.api.routes.query import router as query_router
 from backend.api.routes.stream import router as stream_router
 
 from backend.rag.application import create_rag_application
-from backend.config.cloud import validate_runtime_configuration
+from backend.cloud_config import validate_runtime_configuration
 
 
 @asynccontextmanager
