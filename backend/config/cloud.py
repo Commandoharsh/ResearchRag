@@ -1,0 +1,80 @@
+"""Production configuration validation for ResearchRAG.
+
+This module intentionally validates security-critical runtime settings only.
+It does not pretend that remote Qdrant, PostgreSQL, or object storage adapters
+are implemented; those integrations are tracked in docs/CLOUD_MIGRATION_PLAN.md.
+"""
+from __future__ import annotations
+
+import os
+from dataclasses import dataclass
+
+
+class CloudConfigurationError(RuntimeError):
+    """Raised when production environment configuration is unsafe or incomplete."""
+
+
+@dataclass(frozen=True)
+class RuntimeSettings:
+    environment: str
+    llm_provider: str
+    cors_origins: tuple[str, ...]
+
+
+def _value(name: str, default: str = "") -> str:
+    return os.getenv(name, default).strip()
+
+
+def load_runtime_settings() -> RuntimeSettings:
+    """Read the small set of settings needed for safe application startup."""
+    environment = _value("APP_ENV", "development").lower()
+    provider = _value("LLM_PROVIDER", "ollama").lower()
+    origins = tuple(
+        origin.strip().rstrip("/")
+        for origin in _value("CORS_ORIGINS").split(",")
+        if origin.strip()
+    )
+    return RuntimeSettings(
+        environment=environment,
+        llm_provider=provider,
+        cors_origins=origins,
+    )
+
+
+def validate_runtime_configuration() -> RuntimeSettings:
+    """Validate production-only requirements; preserve local dev defaults."""
+    settings = load_runtime_settings()
+
+    if settings.environment not in {"production", "prod"}:
+        return settings
+
+    problems: list[str] = []
+
+    jwt_secret = _value("JWT_SECRET_KEY")
+    if len(jwt_secret) < 32 or jwt_secret.lower().startswith(
+        ("replace-this", "change-me", "secret")
+    ):
+        problems.append("JWT_SECRET_KEY must be a unique secret of at least 32 characters")
+
+    if not settings.cors_origins:
+        problems.append("CORS_ORIGINS must contain the deployed frontend origin")
+    elif any(not origin.startswith("https://") for origin in settings.cors_origins):
+        problems.append("Every production CORS_ORIGINS entry must use HTTPS")
+
+    if settings.llm_provider == "gemini" and not _value("GEMINI_API_KEY"):
+        problems.append("GEMINI_API_KEY is required when LLM_PROVIDER=gemini")
+    elif settings.llm_provider == "ollama":
+        ollama_url = _value("OLLAMA_BASE_URL")
+        if not ollama_url:
+            problems.append("OLLAMA_BASE_URL is required when LLM_PROVIDER=ollama")
+        elif "localhost" in ollama_url or "127.0.0.1" in ollama_url:
+            problems.append("Cloud Ollama must use a reachable service URL, not localhost")
+    elif settings.llm_provider not in {"gemini", "ollama"}:
+        problems.append("LLM_PROVIDER must be either 'gemini' or 'ollama'")
+
+    if problems:
+        raise CloudConfigurationError(
+            "Unsafe or incomplete production configuration: " + "; ".join(problems)
+        )
+
+    return settings
