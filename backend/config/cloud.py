@@ -61,6 +61,11 @@ def validate_runtime_configuration() -> RuntimeSettings:
     elif any(not origin.startswith("https://") for origin in settings.cors_origins):
         problems.append("Every production CORS_ORIGINS entry must use HTTPS")
 
+    if not _value("QDRANT_URL"):
+        problems.append("QDRANT_URL is required for production vector storage")
+    if not _value("QDRANT_API_KEY"):
+        problems.append("QDRANT_API_KEY is required for production vector storage")
+
     if settings.llm_provider == "gemini" and not _value("GEMINI_API_KEY"):
         problems.append("GEMINI_API_KEY is required when LLM_PROVIDER=gemini")
     elif settings.llm_provider == "ollama":
