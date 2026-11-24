@@ -5,11 +5,11 @@ This document tracks the implementation sequence for the cloud migration.
 ## Phase 1 — architecture and configuration baseline
 - [x] Confirm repository and inspect existing Docker/API/frontend configuration.
 - [x] Record target cloud architecture and migration gates.
-- [ ] Add cloud-specific configuration validation to the backend.
+- [x] Add production-only validation for JWT, HTTPS CORS, LLM credentials, and managed Qdrant.
 - [ ] Keep local Compose defaults separate from production settings.
 
 ## Phase 2 — durable data services
-- [ ] Implement remote Qdrant configuration and connection lifecycle.
+- [x] Implement remote Qdrant client configuration while preserving local embedded mode.
 - [ ] Implement managed PostgreSQL persistence and schema migrations.
 - [ ] Move uploaded source documents to S3-compatible object storage.
 - [ ] Add integration tests using service-level test configuration.
