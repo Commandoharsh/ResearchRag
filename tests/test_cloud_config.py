@@ -17,6 +17,8 @@ def test_development_configuration_keeps_local_defaults(monkeypatch):
 
 def test_production_requires_strong_jwt_secret(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
+    monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
     monkeypatch.setenv("GEMINI_API_KEY", "test-key")
     monkeypatch.setenv("JWT_SECRET_KEY", "short")
@@ -27,6 +29,8 @@ def test_production_requires_strong_jwt_secret(monkeypatch):
 
 def test_production_rejects_non_https_cors(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
+    monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
     monkeypatch.setenv("GEMINI_API_KEY", "test-key")
     monkeypatch.setenv("JWT_SECRET_KEY", "x" * 48)
@@ -37,6 +41,8 @@ def test_production_rejects_non_https_cors(monkeypatch):
 
 def test_production_requires_gemini_key(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
+    monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
     monkeypatch.delenv("GEMINI_API_KEY", raising=False)
     monkeypatch.setenv("JWT_SECRET_KEY", "x" * 48)
@@ -47,6 +53,8 @@ def test_production_requires_gemini_key(monkeypatch):
 
 def test_production_rejects_local_ollama_endpoint(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
+    monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "ollama")
     monkeypatch.setenv("OLLAMA_BASE_URL", "http://localhost:11434")
     monkeypatch.setenv("JWT_SECRET_KEY", "x" * 48)
@@ -57,6 +65,8 @@ def test_production_rejects_local_ollama_endpoint(monkeypatch):
 
 def test_production_accepts_valid_gemini_configuration(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
+    monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
     monkeypatch.setenv("GEMINI_API_KEY", "test-key")
     monkeypatch.setenv("JWT_SECRET_KEY", "x" * 48)
