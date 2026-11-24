@@ -1,6 +1,6 @@
 import pytest
 
-from backend.config.cloud import (
+from backend.cloud_config import (
     CloudConfigurationError,
     load_runtime_settings,
     validate_runtime_configuration,
