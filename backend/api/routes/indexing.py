@@ -2,20 +2,20 @@ from pathlib import Path
 import tempfile
 from uuid import uuid4
 
-from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi import APIRouter, File, HTTPException, UploadFile, status
 
 from backend.rag.application import create_rag_application
 from backend.storage.document_storage import get_document_storage
+from backend.worker.tasks import index_document
 
 
 router = APIRouter(prefix="/index", tags=["Indexing"])
-
 MAX_UPLOAD_SIZE = 25 * 1024 * 1024  # 25 MB
 
 
-@router.post("/pdf")
+@router.post("/pdf", status_code=status.HTTP_202_ACCEPTED)
 async def index_pdf(file: UploadFile = File(...)):
-    """Persist an uploaded PDF, then index it from a temporary local copy."""
+    """Store a PDF and enqueue indexing without blocking the request."""
     if not file.filename:
         raise HTTPException(status_code=400, detail="Filename is required.")
 
@@ -26,10 +26,17 @@ async def index_pdf(file: UploadFile = File(...)):
     total_size = 0
     storage_key = f"documents/{uuid4().hex}.pdf"
     temp_path: Path | None = None
+    stored = False
+    document_id: str | None = None
+    application = create_rag_application()
     storage = get_document_storage()
 
     try:
-        with tempfile.NamedTemporaryFile(prefix="researchrag-", suffix=".pdf", delete=False) as tmp:
+        with tempfile.NamedTemporaryFile(
+            prefix="researchrag-upload-",
+            suffix=".pdf",
+            delete=False,
+        ) as tmp:
             temp_path = Path(tmp.name)
             while True:
                 chunk = await file.read(1024 * 1024)
@@ -48,18 +55,35 @@ async def index_pdf(file: UploadFile = File(...)):
 
         with temp_path.open("rb") as uploaded_file:
             storage.upload_fileobj(uploaded_file, storage_key)
+        stored = True
 
-        application = create_rag_application()
-        result = application.index_pdf(
-            str(temp_path),
-            stored_file_path=storage_key,
+        document = application.document_service.register(
+            filename=safe_filename,
+            file_path=storage_key,
+            file_size=total_size,
+            file_type="pdf",
         )
-        return {"status": "success", "result": result}
+        document_id = document.id
+
+        task = index_document.delay(document_id, storage_key)
+        return {
+            "status": "queued",
+            "document_id": document_id,
+            "task_id": task.id,
+            "filename": safe_filename,
+        }
 
     except HTTPException:
         raise
     except Exception as exc:
-        raise HTTPException(status_code=500, detail=str(exc)) from exc
+        if document_id is not None:
+            application.delete_document_record(document_id)
+        if stored:
+            try:
+                storage.delete_file(storage_key)
+            except Exception:
+                pass
+        raise HTTPException(status_code=503, detail=f"Could not queue document indexing: {exc}") from exc
     finally:
         if temp_path is not None:
             temp_path.unlink(missing_ok=True)
