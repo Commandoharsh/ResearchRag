@@ -160,6 +160,23 @@ class RAGApplication:
             )
             raise
 
+    def index_registered_pdf(self, document_id: str, file_path: str):
+        """Index a previously registered document (used by background workers)."""
+        path = Path(file_path)
+        if not path.is_file() or path.suffix.lower() != ".pdf":
+            raise ValueError("A valid PDF file is required.")
+
+        try:
+            self.document_service.mark_indexing(document_id)
+            result = self.indexing_pipeline.index_pdf(str(path))
+            self.document_service.mark_indexed(document_id, result["chunks"])
+            result["document_id"] = document_id
+            result["status"] = "indexed"
+            return result
+        except Exception as exc:
+            self.document_service.mark_failed(document_id, str(exc))
+            raise
+
     # ======================================================
     # QUERY
     # ======================================================
