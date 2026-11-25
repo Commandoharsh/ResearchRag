@@ -18,6 +18,7 @@ def test_development_configuration_keeps_local_defaults(monkeypatch):
 def test_production_requires_strong_jwt_secret(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
     monkeypatch.setenv("DATABASE_URL", "postgresql://test:test@localhost:5432/researchrag")
+    monkeypatch.setenv("REDIS_URL", "redis://localhost:6379/0")
     monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
     monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
