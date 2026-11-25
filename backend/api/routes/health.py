@@ -1,5 +1,6 @@
 """Liveness, readiness, and dependency health endpoints."""
 import logging
+import os
 import time
 from typing import Any
 
@@ -37,8 +38,11 @@ def _timed_check(check):
 
 def check_database() -> dict[str, Any]:
     application = create_rag_application()
-    with application.database._connect() as connection:
+    connection = application.database._connect()
+    try:
         connection.execute("SELECT 1").fetchone()
+    finally:
+        connection.close()
     return {"engine": "postgresql" if application.database.is_postgres else "sqlite"}
 
 
@@ -54,7 +58,6 @@ def check_qdrant() -> dict[str, Any]:
 
 def check_redis() -> dict[str, Any]:
     from redis import Redis
-    import os
 
     redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
     client = Redis.from_url(redis_url, socket_connect_timeout=2, socket_timeout=2)
@@ -125,16 +128,15 @@ def readiness():
         "worker": _timed_check(check_worker),
     }
     failed = [name for name, result in checks.items() if result["status"] != "healthy"]
-    status = "ready" if not failed else "not_ready"
     return JSONResponse(
         status_code=200 if not failed else 503,
-        content={"status": status, "checks": checks, "failed": failed},
+        content={"status": "ready" if not failed else "not_ready", "checks": checks, "failed": failed},
     )
 
 
 @router.get("")
 def health_check():
-    """Detailed diagnostic check, including optional inference dependencies."""
+    """Detailed dependency diagnostics, including embeddings and the LLM provider."""
     checks = {
         "database": _timed_check(check_database),
         "qdrant": _timed_check(check_qdrant),
