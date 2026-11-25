@@ -49,6 +49,10 @@ services:
         condition: service_started
       ollama:
         condition: service_started
+    command:
+      - sh
+      - -c
+      - "until python -c \"import socket; socket.create_connection(('qdrant', 6333), timeout=2).close()\"; do sleep 2; done; exec uvicorn backend.main:app --host 0.0.0.0 --port 8000 --workers 1"
     ports:
       - "8000:8000"
     restart: unless-stopped
@@ -79,7 +83,10 @@ services:
       QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
       QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       HF_HOME: /app/.cache/huggingface
-    command: ["celery", "-A", "backend.worker.celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=1"]
+    command:
+      - sh
+      - -c
+      - "until python -c \"import socket; socket.create_connection(('qdrant', 6333), timeout=2).close()\"; do sleep 2; done; exec celery -A backend.worker.celery_app:celery_app worker --loglevel=INFO --concurrency=1"
     volumes:
       - researchrag_data:/app/data
       - huggingface_cache:/app/.cache/huggingface
