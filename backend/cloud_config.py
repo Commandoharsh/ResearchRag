@@ -1,8 +1,7 @@
 """Production configuration validation for ResearchRAG.
 
-This module intentionally validates security-critical runtime settings only.
-It does not pretend that remote Qdrant, PostgreSQL, or object storage adapters
-are implemented; those integrations are tracked in docs/CLOUD_MIGRATION_PLAN.md.
+This module validates security-critical production settings, including
+PostgreSQL, Qdrant Cloud, and Cloudflare R2 configuration.
 """
 from __future__ import annotations
 
