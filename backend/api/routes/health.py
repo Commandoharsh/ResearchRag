@@ -92,14 +92,21 @@ def check_llm() -> dict[str, Any]:
         response = requests.get(f"{base_url}/api/tags", timeout=3)
         response.raise_for_status()
         models = [item.get("name") for item in response.json().get("models", [])]
+        model_available = (
+            settings.OLLAMA_MODEL in models
+            or f"{settings.OLLAMA_MODEL}:latest" in models
+        )
+        if not model_available:
+            raise RuntimeError(
+                f"Configured Ollama model '{settings.OLLAMA_MODEL}' is not installed"
+            )
         return {
             "provider": "ollama",
             "configured_model": settings.OLLAMA_MODEL,
-            "model_available": (
-                settings.OLLAMA_MODEL in models
-                or f"{settings.OLLAMA_MODEL}:latest" in models
-            ),
+            "model_available": True,
         }
+    if provider == "mock":
+        return {"provider": "mock", "configuration": "available"}
     raise RuntimeError(f"Unsupported LLM provider: {provider}")
 
 
