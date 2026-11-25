@@ -119,6 +119,13 @@ class VectorStore:
         )
         return results.points
 
+    def count_chunks(self) -> int:
+        result = self.client.count(
+            collection_name=self.collection_name,
+            exact=True,
+        )
+        return int(result.count)
+
     def get_all_chunks(self):
         records, _ = self.client.scroll(
             collection_name=self.collection_name,
