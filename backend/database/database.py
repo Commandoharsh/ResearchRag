@@ -86,6 +86,11 @@ class Database:
         return connection
 
     def _initialize(self):
+        # PostgreSQL schema lifecycle is owned by Alembic migrations.
+        # Keep the lightweight bootstrap for local SQLite development/tests.
+        if self.is_postgres:
+            return
+
         with self._connect() as connection:
             connection.execute(
                 """
