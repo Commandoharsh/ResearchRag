@@ -32,7 +32,7 @@ def _timed_check(check):
         return {
             "status": "unhealthy",
             "latency_ms": round((time.perf_counter() - started) * 1000, 2),
-            "error": str(exc),
+            "error": type(exc).__name__,
         }
 
 
