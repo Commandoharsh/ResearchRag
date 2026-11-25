@@ -1,4 +1,14 @@
 services:
+  qdrant:
+    image: qdrant/qdrant:latest
+    container_name: researchrag-qdrant
+    volumes:
+      - qdrant_data:/qdrant/storage
+    ports:
+      - "6333:6333"
+      - "6334:6334"
+    restart: unless-stopped
+
   redis:
     image: redis:7-alpine
     container_name: researchrag-redis
@@ -25,6 +35,8 @@ services:
       DATA_DIR: /app/data
       LOCAL_STORAGE_DIR: /app/data/objects
       REDIS_URL: redis://redis:6379/0
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       CORS_ORIGINS: http://localhost:8080,http://127.0.0.1:8080,http://localhost:5173,http://127.0.0.1:5173
       HF_HOME: /app/.cache/huggingface
     volumes:
@@ -33,6 +45,8 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+      qdrant:
+        condition: service_started
       ollama:
         condition: service_started
     ports:
@@ -62,6 +76,8 @@ services:
       DATA_DIR: /app/data
       LOCAL_STORAGE_DIR: /app/data/objects
       REDIS_URL: redis://redis:6379/0
+      QDRANT_URL: ${QDRANT_URL:-http://qdrant:6333}
+      QDRANT_API_KEY: ${QDRANT_API_KEY:-}
       HF_HOME: /app/.cache/huggingface
     command: ["celery", "-A", "backend.worker.celery_app:celery_app", "worker", "--loglevel=INFO", "--concurrency=1"]
     volumes:
@@ -102,3 +118,4 @@ volumes:
   huggingface_cache:
   ollama_models:
   redis_data:
+  qdrant_data:
