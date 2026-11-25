@@ -10,7 +10,7 @@ This document tracks the implementation sequence for the cloud migration.
 
 ## Phase 2 — durable data services
 - [x] Implement remote Qdrant client configuration while preserving local embedded mode.
-- [ ] Implement managed PostgreSQL persistence and schema migrations.
+- [x] Add a PostgreSQL connection backend while preserving SQLite local development.\n- [ ] Add versioned schema migrations and run PostgreSQL integration tests.
 - [ ] Move uploaded source documents to S3-compatible object storage.
 - [ ] Add integration tests using service-level test configuration.
 - [ ] Preserve a local development option.
