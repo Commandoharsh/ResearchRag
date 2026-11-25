@@ -99,9 +99,9 @@ function Documents() {
     const [search, setSearch] = useState("");
     const [statusFilter, setStatusFilter] = useState("all");
 
-    async function loadDocuments() {
+    async function loadDocuments(showLoading = true) {
         try {
-            setLoading(true);
+            if (showLoading) setLoading(true);
             setError("");
 
             const data = await getDocuments();
@@ -119,7 +119,7 @@ function Documents() {
                 "Failed to load documents."
             );
         } finally {
-            setLoading(false);
+            if (showLoading) setLoading(false);
         }
     }
 
@@ -137,7 +137,7 @@ function Documents() {
         if (!hasPendingDocuments) return undefined;
 
         const intervalId = window.setInterval(() => {
-            loadDocuments();
+            loadDocuments(false);
         }, 3000);
 
         return () => window.clearInterval(intervalId);
