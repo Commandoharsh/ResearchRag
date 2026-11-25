@@ -69,6 +69,11 @@ def test_production_rejects_local_ollama_endpoint(monkeypatch):
 
 def test_production_accepts_valid_gemini_configuration(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("STORAGE_BACKEND", "r2")
+    monkeypatch.setenv("R2_ENDPOINT_URL", "https://account.r2.cloudflarestorage.com")
+    monkeypatch.setenv("R2_BUCKET_NAME", "researchrag")
+    monkeypatch.setenv("R2_ACCESS_KEY_ID", "test-access-key")
+    monkeypatch.setenv("R2_SECRET_ACCESS_KEY", "test-secret-key")
     monkeypatch.setenv("DATABASE_URL", "postgresql://test:test@localhost:5432/researchrag")
     monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
     monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
