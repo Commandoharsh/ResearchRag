@@ -1,222 +1,155 @@
-import sqlite3
+"""Liveness, readiness, and dependency health endpoints."""
+import logging
 import time
-from pathlib import Path
+from typing import Any
 
-import requests
 from fastapi import APIRouter
+from fastapi.responses import JSONResponse
 
 from backend.config import settings
 from backend.rag.application import create_rag_application
 
-
-router = APIRouter(
-    prefix="/health",
-    tags=["Health"],
-)
+logger = logging.getLogger("researchrag.health")
+router = APIRouter(prefix="/health", tags=["Health"])
 
 
-def check_sqlite():
-    """Check SQLite database connectivity."""
-
-    start = time.perf_counter()
-
+def _timed_check(check):
+    started = time.perf_counter()
     try:
-        database_path = Path("data/researchrag.db")
-
-        database_path.parent.mkdir(
-            parents=True,
-            exist_ok=True,
-        )
-
-        with sqlite3.connect(
-            database_path,
-            timeout=2,
-        ) as connection:
-            cursor = connection.cursor()
-            cursor.execute("SELECT 1")
-            cursor.fetchone()
-
-        latency_ms = (
-            time.perf_counter() - start
-        ) * 1000
-
+        details = check()
         return {
             "status": "healthy",
-            "latency_ms": round(latency_ms, 2),
-            "database": str(database_path),
+            "latency_ms": round((time.perf_counter() - started) * 1000, 2),
+            **(details or {}),
         }
-
     except Exception as exc:
+        logger.warning(
+            "Dependency health check failed",
+            extra={"dependency": getattr(check, "__name__", "unknown")},
+            exc_info=True,
+        )
         return {
             "status": "unhealthy",
+            "latency_ms": round((time.perf_counter() - started) * 1000, 2),
             "error": str(exc),
         }
 
 
-def check_qdrant():
-    """
-    Check the existing embedded Qdrant instance.
+def check_database() -> dict[str, Any]:
+    application = create_rag_application()
+    with application.database._connect() as connection:
+        connection.execute("SELECT 1").fetchone()
+    return {"engine": "postgresql" if application.database.is_postgres else "sqlite"}
 
-    IMPORTANT:
-    Do not create another QdrantClient with the same
-    local storage path. The application already owns it.
-    """
 
-    start = time.perf_counter()
+def check_qdrant() -> dict[str, Any]:
+    application = create_rag_application()
+    vector_store = application.state.vector_store
+    client = vector_store.client
+    if client is None:
+        raise RuntimeError("Qdrant client is not initialized")
+    client.get_collections()
+    return {"collection": vector_store.collection_name, "mode": "configured"}
 
+
+def check_redis() -> dict[str, Any]:
+    from redis import Redis
+    import os
+
+    redis_url = os.getenv("REDIS_URL", "redis://redis:6379/0")
+    client = Redis.from_url(redis_url, socket_connect_timeout=2, socket_timeout=2)
     try:
-        application = create_rag_application()
-
-        vector_store = application.state.vector_store
-        client = vector_store.client
-
-        if client is None:
-            raise RuntimeError(
-                "Qdrant client is not initialized."
-            )
-
-        collections = client.get_collections()
-
-        collection_names = [
-            collection.name
-            for collection in collections.collections
-        ]
-
-        expected_collection = vector_store.collection_name
-
-        if expected_collection not in collection_names:
-            raise RuntimeError(
-                f"Collection '{expected_collection}' "
-                "does not exist."
-            )
-
-        latency_ms = (
-            time.perf_counter() - start
-        ) * 1000
-
-        return {
-            "status": "healthy",
-            "mode": "embedded",
-            "collection": expected_collection,
-            "latency_ms": round(latency_ms, 2),
-        }
-
-    except Exception as exc:
-        return {
-            "status": "unhealthy",
-            "error": str(exc),
-        }
+        if not client.ping():
+            raise RuntimeError("Redis did not respond to PING")
+    finally:
+        client.close()
+    return {"broker": "reachable"}
 
 
-def check_embeddings():
-    """Check the initialized embedding model."""
+def check_worker() -> dict[str, Any]:
+    from backend.worker.celery_app import celery_app
 
-    start = time.perf_counter()
-
-    try:
-        application = create_rag_application()
-
-        embedding_model = application.state.embedding_model
-
-        vector = embedding_model.encode(
-            ["ResearchRAG health check"]
-        )
-
-        if vector is None or len(vector) == 0:
-            raise RuntimeError(
-                "Embedding model returned no vector."
-            )
-
-        latency_ms = (
-            time.perf_counter() - start
-        ) * 1000
-
-        return {
-            "status": "healthy",
-            "model": "all-MiniLM-L6-v2",
-            "dimension": len(vector[0]),
-            "latency_ms": round(latency_ms, 2),
-        }
-
-    except Exception as exc:
-        return {
-            "status": "unhealthy",
-            "error": str(exc),
-        }
+    inspector = celery_app.control.inspect(timeout=1.5)
+    workers = inspector.ping() or {}
+    if not workers:
+        raise RuntimeError("No Celery worker responded to ping")
+    return {"workers": sorted(workers.keys())}
 
 
-def check_ollama():
-    """Check Ollama availability."""
+def check_llm() -> dict[str, Any]:
+    import requests
 
-    start = time.perf_counter()
-
-    try:
-        response = requests.get(
-            f"{settings.OLLAMA_BASE_URL}/api/tags",
-            timeout=3,
-        )
-
+    provider = settings.LLM_PROVIDER
+    if provider == "gemini":
+        if not settings.GEMINI_API_KEY:
+            raise RuntimeError("GEMINI_API_KEY is not configured")
+        return {"provider": "gemini", "configuration": "present"}
+    if provider == "ollama":
+        base_url = settings.OLLAMA_BASE_URL.rstrip("/")
+        response = requests.get(f"{base_url}/api/tags", timeout=3)
         response.raise_for_status()
-
-        data = response.json()
-
-        models = [
-            model.get("name")
-            for model in data.get("models", [])
-        ]
-
-        latency_ms = (
-            time.perf_counter() - start
-        ) * 1000
-
-        model_configured = (
-            settings.OLLAMA_MODEL in models
-            or f"{settings.OLLAMA_MODEL}:latest" in models
-        )
-
+        models = [item.get("name") for item in response.json().get("models", [])]
         return {
-            "status": "healthy",
-            "base_url": settings.OLLAMA_BASE_URL,
+            "provider": "ollama",
             "configured_model": settings.OLLAMA_MODEL,
-            "model_available": model_configured,
-            "models": models,
-            "latency_ms": round(latency_ms, 2),
+            "model_available": (
+                settings.OLLAMA_MODEL in models
+                or f"{settings.OLLAMA_MODEL}:latest" in models
+            ),
         }
+    raise RuntimeError(f"Unsupported LLM provider: {provider}")
 
-    except Exception as exc:
-        return {
-            "status": "unhealthy",
-            "base_url": settings.OLLAMA_BASE_URL,
-            "error": str(exc),
-        }
+
+def check_embeddings() -> dict[str, Any]:
+    application = create_rag_application()
+    model = application.state.embedding_model
+    vector = model.encode(["ResearchRAG readiness probe"])
+    if vector is None or len(vector) == 0:
+        raise RuntimeError("Embedding model returned no vector")
+    return {"dimension": len(vector[0])}
+
+
+@router.get("/live")
+def liveness():
+    """Process liveness only; does not depend on external services."""
+    return {"status": "alive", "service": "ResearchRAG"}
+
+
+@router.get("/ready")
+def readiness():
+    """Readiness is successful only when critical dependencies respond."""
+    checks = {
+        "database": _timed_check(check_database),
+        "qdrant": _timed_check(check_qdrant),
+        "redis": _timed_check(check_redis),
+        "worker": _timed_check(check_worker),
+    }
+    failed = [name for name, result in checks.items() if result["status"] != "healthy"]
+    status = "ready" if not failed else "not_ready"
+    return JSONResponse(
+        status_code=200 if not failed else 503,
+        content={"status": status, "checks": checks, "failed": failed},
+    )
 
 
 @router.get("")
 def health_check():
-    """Detailed ResearchRAG health check."""
-
-    services = {
-        "sqlite": check_sqlite(),
-        "qdrant": check_qdrant(),
-        "embeddings": check_embeddings(),
-        "ollama": check_ollama(),
+    """Detailed diagnostic check, including optional inference dependencies."""
+    checks = {
+        "database": _timed_check(check_database),
+        "qdrant": _timed_check(check_qdrant),
+        "redis": _timed_check(check_redis),
+        "worker": _timed_check(check_worker),
+        "embeddings": _timed_check(check_embeddings),
+        "llm": _timed_check(check_llm),
     }
-
-    unhealthy_services = [
-        name
-        for name, result in services.items()
-        if result["status"] != "healthy"
-    ]
-
-    overall_status = (
-        "healthy"
-        if not unhealthy_services
-        else "degraded"
+    failed = [name for name, result in checks.items() if result["status"] != "healthy"]
+    return JSONResponse(
+        status_code=200 if not failed else 503,
+        content={
+            "status": "healthy" if not failed else "degraded",
+            "service": "ResearchRAG",
+            "checks": checks,
+            "unhealthy_services": failed,
+        },
     )
-
-    return {
-        "status": overall_status,
-        "service": "ResearchRAG",
-        "services": services,
-        "unhealthy_services": unhealthy_services,
-    }
