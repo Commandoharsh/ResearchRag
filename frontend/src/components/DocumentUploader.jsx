@@ -101,11 +101,15 @@ function DocumentUploader({
 
             const uploadedFileName = file.name;
 
-            await uploadDocument(file, (percentage) => {
+            const uploadResult = await uploadDocument(file, (percentage) => {
                 setProgress(percentage);
             });
 
-            setSuccess(`${uploadedFileName} uploaded successfully.`);
+            setSuccess(
+                uploadResult.status === "queued"
+                    ? `${uploadedFileName} uploaded and queued for indexing.`
+                    : `${uploadedFileName} uploaded successfully.`
+            );
             clearFile();
 
             // Support both callback names.
