@@ -69,6 +69,18 @@ def validate_runtime_configuration() -> RuntimeSettings:
     if not _value("QDRANT_API_KEY"):
         problems.append("QDRANT_API_KEY is required for production vector storage")
 
+    storage_backend = _value("STORAGE_BACKEND", "local").lower()
+    if storage_backend != "r2":
+        problems.append("STORAGE_BACKEND must be 'r2' in production")
+    for variable in (
+        "R2_ENDPOINT_URL",
+        "R2_BUCKET_NAME",
+        "R2_ACCESS_KEY_ID",
+        "R2_SECRET_ACCESS_KEY",
+    ):
+        if not _value(variable):
+            problems.append(f"{variable} is required when STORAGE_BACKEND=r2")
+
     if settings.llm_provider == "gemini" and not _value("GEMINI_API_KEY"):
         problems.append("GEMINI_API_KEY is required when LLM_PROVIDER=gemini")
     elif settings.llm_provider == "ollama":
