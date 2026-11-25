@@ -186,6 +186,7 @@ class RAGApplication:
         question: str,
         conversation_context=None,
     ):
+        self.state.refresh_bm25_if_changed()
         return self.rag_service.query(
             question=question,
             conversation_context=conversation_context,
