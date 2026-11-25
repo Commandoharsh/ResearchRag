@@ -109,7 +109,7 @@ class RAGApplication:
     # DOCUMENT INDEXING
     # ======================================================
 
-    def index_pdf(self, file_path: str):
+    def index_pdf(self, file_path: str, stored_file_path: str | None = None):
         path = Path(file_path)
 
         if not path.exists():
@@ -129,7 +129,7 @@ class RAGApplication:
 
         document = self.document_service.register(
             filename=path.name,
-            file_path=str(path),
+            file_path=stored_file_path or str(path),
             file_size=path.stat().st_size,
             file_type="pdf",
         )
