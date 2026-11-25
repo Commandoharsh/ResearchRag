@@ -41,6 +41,10 @@ function StatusBadge({ status }) {
     const normalized = String(status || "unknown").toLowerCase();
 
     const configurations = {
+        uploaded: {
+            icon: Clock,
+            label: "Queued",
+        },
         indexed: {
             icon: CheckCircle,
             label: "Indexed",
@@ -123,13 +127,31 @@ function Documents() {
         loadDocuments();
     }, []);
 
+    useEffect(() => {
+        const hasPendingDocuments = documents.some(
+            (document) =>
+                document.status === "uploaded" ||
+                document.status === "indexing"
+        );
+
+        if (!hasPendingDocuments) return undefined;
+
+        const intervalId = window.setInterval(() => {
+            loadDocuments();
+        }, 3000);
+
+        return () => window.clearInterval(intervalId);
+    }, [documents]);
+
     const statistics = useMemo(() => {
         const indexed = documents.filter(
             (document) => document.status === "indexed"
         ).length;
 
         const indexing = documents.filter(
-            (document) => document.status === "indexing"
+            (document) =>
+                document.status === "uploaded" ||
+                document.status === "indexing"
         ).length;
 
         const failed = documents.filter(
@@ -274,6 +296,7 @@ function Documents() {
                         aria-label="Filter documents by status"
                     >
                         <option value="all">All statuses</option>
+                        <option value="uploaded">Queued</option>
                         <option value="indexed">Indexed</option>
                         <option value="indexing">Indexing</option>
                         <option value="failed">Failed</option>
