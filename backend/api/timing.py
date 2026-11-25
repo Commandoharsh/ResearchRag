@@ -18,7 +18,8 @@ class TimingMiddleware(BaseHTTPMiddleware):
             elapsed = time.perf_counter() - start
             duration_ms = elapsed * 1000
             request_id = getattr(request.state, "request_id", "unknown")
-            path = request.url.path
+            route = request.scope.get("route")
+            path = getattr(route, "path", request.url.path)
             record_request(request.method, path, status_code, duration_ms)
             logger.info(
                 "HTTP request completed",
@@ -35,13 +36,15 @@ class TimingMiddleware(BaseHTTPMiddleware):
         except Exception:
             elapsed = (time.perf_counter() - start) * 1000
             request_id = getattr(request.state, "request_id", "unknown")
-            record_request(request.method, request.url.path, status_code, elapsed)
+            route = request.scope.get("route")
+            path = getattr(route, "path", request.url.path)
+            record_request(request.method, path, status_code, elapsed)
             logger.exception(
                 "HTTP request raised an unhandled exception",
                 extra={
                     "request_id": request_id,
                     "method": request.method,
-                    "path": request.url.path,
+                    "path": path,
                     "status_code": status_code,
                     "duration_ms": round(elapsed, 3),
                 },
