@@ -17,6 +17,7 @@ def test_development_configuration_keeps_local_defaults(monkeypatch):
 
 def test_production_requires_strong_jwt_secret(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://test:test@localhost:5432/researchrag")
     monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
     monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
@@ -29,6 +30,7 @@ def test_production_requires_strong_jwt_secret(monkeypatch):
 
 def test_production_rejects_non_https_cors(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://test:test@localhost:5432/researchrag")
     monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
     monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
@@ -41,6 +43,7 @@ def test_production_rejects_non_https_cors(monkeypatch):
 
 def test_production_requires_gemini_key(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://test:test@localhost:5432/researchrag")
     monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
     monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
@@ -53,6 +56,7 @@ def test_production_requires_gemini_key(monkeypatch):
 
 def test_production_rejects_local_ollama_endpoint(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://test:test@localhost:5432/researchrag")
     monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
     monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "ollama")
@@ -65,6 +69,7 @@ def test_production_rejects_local_ollama_endpoint(monkeypatch):
 
 def test_production_accepts_valid_gemini_configuration(monkeypatch):
     monkeypatch.setenv("APP_ENV", "production")
+    monkeypatch.setenv("DATABASE_URL", "postgresql://test:test@localhost:5432/researchrag")
     monkeypatch.setenv("QDRANT_URL", "https://cluster.qdrant.io")
     monkeypatch.setenv("QDRANT_API_KEY", "qdrant-test-key")
     monkeypatch.setenv("LLM_PROVIDER", "gemini")
