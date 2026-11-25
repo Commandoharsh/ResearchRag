@@ -18,6 +18,39 @@ the API and worker are separate processes and must not both open Qdrant's
 embedded local filesystem database. Set `QDRANT_URL` and optionally
 `QDRANT_API_KEY` to use Qdrant Cloud instead.
 
+## Preserve an existing embedded Qdrant index
+
+The Compose stack now uses a Qdrant server so the API and worker can safely
+access the same vector collection. If you already have vectors in the old
+embedded `data/qdrant` directory, migrate them before using the new stack.
+The old named Docker volume is retained; this migration copies its vectors and
+payloads into the new `qdrant_data` volume.
+
+Run from PowerShell:
+
+```powershell
+# Start only the new Qdrant server and Redis first.
+docker compose up -d qdrant redis
+
+# Stop processes that may hold the embedded Qdrant filesystem lock.
+docker compose stop backend worker
+
+# Copy existing vectors from the shared researchrag_data volume.
+docker compose run --rm --no-deps backend python scripts/migrate_local_qdrant_to_server.py --target-url http://qdrant:6333
+
+# Start the complete stack.
+docker compose up -d --build
+```
+
+If this is a fresh installation or you have no local vectors to preserve, skip
+the migration command. Do not run the migration while the old backend or worker
+is still using the embedded Qdrant directory.
+
+The migration utility is idempotent for point IDs: it upserts existing points
+into the target collection. Keep a backup of Docker volumes before any
+production migration. Existing document metadata rows and old file paths are
+not rewritten by this vector migration.
+
 ## Start services
 
 From the repository root:
