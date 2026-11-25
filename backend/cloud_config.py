@@ -62,6 +62,8 @@ def validate_runtime_configuration() -> RuntimeSettings:
 
     if not _value("DATABASE_URL"):
         problems.append("DATABASE_URL is required for production relational persistence")
+    if not _value("REDIS_URL"):
+        problems.append("REDIS_URL is required for production background job processing")
 
     if not _value("QDRANT_URL"):
         problems.append("QDRANT_URL is required for production vector storage")
