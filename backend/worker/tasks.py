@@ -15,10 +15,11 @@ from backend.worker.celery_app import celery_app
 )
 def index_document(self, document_id: str, storage_key: str):
     """Download a stored PDF and index it with bounded automatic retries."""
-    application = create_rag_application()
+    application = None
     temp_path = None
 
     try:
+        application = create_rag_application()
         document = application.get_document(document_id)
         if document is None:
             raise LookupError(f"Document {document_id} does not exist.")
@@ -45,7 +46,10 @@ def index_document(self, document_id: str, storage_key: str):
         if self.request.retries < self.max_retries:
             raise self.retry(exc=exc)
 
-        application.document_service.mark_failed(document_id, str(exc))
+        if application is not None:
+            document = application.get_document(document_id)
+            if document is not None:
+                application.document_service.mark_failed(document_id, str(exc))
         raise
     finally:
         if temp_path is not None:
