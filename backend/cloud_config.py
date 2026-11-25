@@ -61,6 +61,9 @@ def validate_runtime_configuration() -> RuntimeSettings:
     elif any(not origin.startswith("https://") for origin in settings.cors_origins):
         problems.append("Every production CORS_ORIGINS entry must use HTTPS")
 
+    if not _value("DATABASE_URL"):
+        problems.append("DATABASE_URL is required for production relational persistence")
+
     if not _value("QDRANT_URL"):
         problems.append("QDRANT_URL is required for production vector storage")
     if not _value("QDRANT_API_KEY"):
