@@ -63,9 +63,6 @@ transformers==5.17.0
 typer==0.27.2
 typing-inspection==0.4.4
 typing_extensions==4.16.0
-urllib3==2.8.0
-
-
-PyJWT>=2.8.0
+urllib3==2.8.0\npsycopg[binary]>=3.2,<4\n\nPyJWT>=2.8.0
 
 passlib[bcrypt]>=1.7.4
