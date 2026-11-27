@@ -10,7 +10,7 @@ evaluation/benchmarking framework. Rather than relying on an LLM's
 parametric knowledge alone, the pipeline retrieves relevant passages
 from the indexed documents and uses those passages as grounding context
 for generation.
-![Uploading image.png…]()
+[Uploading image.png…]()
 
 
 > **Project status:** Active development. Configuration, supported
