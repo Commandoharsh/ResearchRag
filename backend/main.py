@@ -16,14 +16,20 @@ from backend.api.routes.conversation_query import (
 from backend.api.routes.documents import router as documents_router
 from backend.api.routes.health import router as health_router
 from backend.api.routes.indexing import router as indexing_router
+from backend.api.routes.metrics import router as metrics_router
 from backend.api.routes.query import router as query_router
 from backend.api.routes.stream import router as stream_router
 
 from backend.rag.application import create_rag_application
+from backend.cloud_config import validate_runtime_configuration
+from backend.observability.logging_config import configure_logging
+
+configure_logging()
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    validate_runtime_configuration()
     create_rag_application()
     yield
 
@@ -35,11 +41,6 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
-
-# ============================================================
-# CORS
-# ============================================================
-
 default_origins = [
     "http://localhost:8080",
     "http://127.0.0.1:8080",
@@ -48,7 +49,6 @@ default_origins = [
 ]
 
 cors_origins = os.getenv("CORS_ORIGINS", "")
-
 allow_origins = (
     [origin.strip() for origin in cors_origins.split(",") if origin.strip()]
     if cors_origins.strip()
@@ -63,28 +63,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-
-# ============================================================
-# Middleware
-# ============================================================
-
 app.add_middleware(RequestIDMiddleware)
 app.add_middleware(TimingMiddleware)
-
-
-# ============================================================
-# Exception handling
-# ============================================================
-
-app.add_exception_handler(
-    Exception,
-    global_exception_handler,
-)
-
-
-# ============================================================
-# API Routers
-# ============================================================
+app.add_exception_handler(Exception, global_exception_handler)
 
 app.include_router(auth_router)
 app.include_router(documents_router)
@@ -94,11 +75,8 @@ app.include_router(stream_router)
 app.include_router(conversations_router)
 app.include_router(conversation_query_router)
 app.include_router(health_router)
+app.include_router(metrics_router)
 
-
-# ============================================================
-# Root
-# ============================================================
 
 @app.get("/")
 def root():

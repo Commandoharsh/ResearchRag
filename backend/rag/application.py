@@ -109,7 +109,7 @@ class RAGApplication:
     # DOCUMENT INDEXING
     # ======================================================
 
-    def index_pdf(self, file_path: str):
+    def index_pdf(self, file_path: str, stored_file_path: str | None = None):
         path = Path(file_path)
 
         if not path.exists():
@@ -129,7 +129,7 @@ class RAGApplication:
 
         document = self.document_service.register(
             filename=path.name,
-            file_path=str(path),
+            file_path=stored_file_path or str(path),
             file_size=path.stat().st_size,
             file_type="pdf",
         )
@@ -160,6 +160,23 @@ class RAGApplication:
             )
             raise
 
+    def index_registered_pdf(self, document_id: str, file_path: str):
+        """Index a previously registered document (used by background workers)."""
+        path = Path(file_path)
+        if not path.is_file() or path.suffix.lower() != ".pdf":
+            raise ValueError("A valid PDF file is required.")
+
+        try:
+            self.document_service.mark_indexing(document_id)
+            result = self.indexing_pipeline.index_pdf(str(path))
+            self.document_service.mark_indexed(document_id, result["chunks"])
+            result["document_id"] = document_id
+            result["status"] = "indexed"
+            return result
+        except Exception as exc:
+            self.document_service.mark_failed(document_id, str(exc))
+            raise
+
     # ======================================================
     # QUERY
     # ======================================================
@@ -169,6 +186,7 @@ class RAGApplication:
         question: str,
         conversation_context=None,
     ):
+        self.state.refresh_bm25_if_changed()
         return self.rag_service.query(
             question=question,
             conversation_context=conversation_context,

@@ -1,0 +1,1 @@
+"""ResearchRAG background worker package."""

@@ -138,7 +138,7 @@ pip install -r requirements.txt
 
 ### 4. Configure environment variables
 
-Create a local `.env` file using the example as a starting point:
+Create a local `.env` file using the example as a starting point. For local development, leave `QDRANT_URL` and `QDRANT_API_KEY` empty to use embedded Qdrant. For a managed Qdrant cluster, set both values; the vector-store client then uses the remote service:
 
 ``` powershell
 Copy-Item .env.example .env
